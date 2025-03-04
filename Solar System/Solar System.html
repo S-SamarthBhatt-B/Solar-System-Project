@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Explorer</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        
+        .details {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .details h3 {
+            margin: 0 0 10px;
+        }
+        .details img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        
+        .translucent-btn {
+            position: absolute;
+            bottom: 20px; /* Distance from the bottom */
+            left: 50%;
+            transform: translateX(-50%); /* Centers the button */
+            
+            font-size: 18px;
+            padding: 12px 24px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s ease-in-out;
+        }
+
+        .translucent-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <button class="translucent-btn" onclick="window.location.href='http://localhost:8000/quiz.html';">
+        Open Quiz
+    </button>
+    
+    
+    <div class="details" id="planet-details" style="display: none;">
+        <img id="planet-image" src="" alt="Planet Image">
+        <h3 id="planet-name">Planet Name</h3>
+        <p id="planet-info">Details about the planet will appear here.</p>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add OrbitControls for 360-degree view
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.maxDistance = 100;
+        controls.minDistance = 10;
+
+        // Light source (Sunlight)
+        const light = new THREE.PointLight(0xffffff, 1.5, 0);
+        light.position.set(0, 0, 0);
+        scene.add(light);
+
+        // Load textures
+        const textureLoader = new THREE.TextureLoader();
+
+        const textures = {
+            Sun: textureLoader.load('textures/sun.jpg'),
+            Mercury: textureLoader.load('textures/mercury.jpg'),
+            Venus: textureLoader.load('textures/venus.jpg'),
+            Earth: textureLoader.load('textures/earth.jpg'),
+            Mars: textureLoader.load('textures/mars.jpg'),
+            Jupiter: textureLoader.load('textures/jupiter.jpg'),
+            Saturn: textureLoader.load('textures/saturn.jpg'),
+            Uranus: textureLoader.load('textures/uranus.jpg'),
+            Neptune: textureLoader.load('textures/neptune.jpg'),
+            Moon: textureLoader.load('textures/moon.jpg')
+        };
+
+        // Sun
+        const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ map: textures.Sun });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+
+        // Planets data
+        const planets = [
+            { 
+                name: 'Mercury', size: 0.3, distance: 5, speed: 0.002, moons: [], 
+                info: {
+                    diameter: '4,880 km',
+                    distanceFromSun: '57.91 million km',
+                    position: 1,
+                    minerals: 'Silicates, Iron',
+                    environment: 'No atmosphere',
+                    temperature: '-173 to 427°C'
+                }
+            },
+            { 
+                name: 'Venus', size: 0.6, distance: 7, speed: 0.0015, moons: [], 
+                info: {
+                    diameter: '12,104 km',
+                    distanceFromSun: '108.2 million km',
+                    position: 2,
+                    minerals: 'Basaltic rocks',
+                    environment: 'Thick CO2 atmosphere',
+                    temperature: '462°C'
+                }
+            },
+            { 
+                name: 'Earth', size: 0.7, distance: 9, speed: 0.001, 
+                moons: [
+                    { name: 'Moon', size: 0.2, distance: 1, texture: textures.Moon }
+                ], 
+                info: {
+                    diameter: '12,742 km',
+                    distanceFromSun: '149.6 million km',
+                    position: 3,
+                    minerals: 'Silicates, Iron, Water',
+                    environment: 'Nitrogen-Oxygen atmosphere',
+                    temperature: '-88 to 58°C'
+                }
+            },
+            { 
+                name: 'Mars', size: 0.5, distance: 11, speed: 0.0008, 
+                moons: [
+                    { name: 'Phobos', size: 0.1, distance: 0.5 },
+                    { name: 'Deimos', size: 0.1, distance: 0.8 }
+                ], 
+                info: {
+                    diameter: '6,779 km',
+                    distanceFromSun: '227.9 million km',
+                    position: 4,
+                    minerals: 'Iron Oxides',
+                    environment: 'Thin CO2 atmosphere',
+                    temperature: '-63°C'
+                }
+            },
+            { 
+                name: 'Jupiter', size: 1.5, distance: 15, speed: 0.0005, 
+                moons: [
+                    { name: 'Europa', size: 0.3, distance: 2 },
+                    { name: 'Ganymede', size: 0.4, distance: 3 }
+                ], 
+                info: {
+                    diameter: '139,820 km',
+                    distanceFromSun: '778.5 million km',
+                    position: 5,
+                    minerals: 'Hydrogen, Helium',
+                    environment: 'Gas Giant',
+                    temperature: '-108°C'
+                }
+            },
+            { 
+                name: 'Saturn', size: 1.2, distance: 20, speed: 0.0003, 
+                moons: [
+                    { name: 'Titan', size: 0.4, distance: 2 }
+                ], 
+                info: {
+                    diameter: '116,460 km',
+                    distanceFromSun: '1.434 billion km',
+                    position: 6,
+                    minerals: 'Hydrogen, Helium',
+                    environment: 'Gas Giant',
+                    temperature: '-139°C'
+                }
+            },
+            { 
+                name: 'Uranus', size: 1, distance: 25, speed: 0.0002, moons: [], 
+                info: {
+                    diameter: '50,724 km',
+                    distanceFromSun: '2.871 billion km',
+                    position: 7,
+                    minerals: 'Ices, Methane',
+                    environment: 'Ice Giant',
+                    temperature: '-195°C'
+                }
+            },
+            { 
+                name: 'Neptune', size: 1, distance: 30, speed: 0.0001, moons: [], 
+                info: {
+                    diameter: '49,244 km',
+                    distanceFromSun: '4.495 billion km',
+                    position: 8,
+                    minerals: 'Ices, Methane',
+                    environment: 'Ice Giant',
+                    temperature: '-201°C'
+                }
+            }
+        ];
+
+        // Create planets and orbital lines
+        const planetMeshes = planets.map(planet => {
+            const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+            const material = new THREE.MeshStandardMaterial({ map: textures[planet.name] });
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // Orbital lines
+            const orbitGeometry = new THREE.RingGeometry(planet.distance - 0.01, planet.distance + 0.01, 64);
+            const orbitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+            const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+            orbit.rotation.x = Math.PI / 2;
+            scene.add(orbit);
+
+            // Create moons
+            const moons = planet.moons.map(moon => {
+                const moonGeometry = new THREE.SphereGeometry(moon.size, 16, 16);
+                const moonMaterial = new THREE.MeshStandardMaterial({ map: moon.texture || null, color: 0xaaaaaa });
+                const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+                scene.add(moonMesh);
+                return { ...moon, mesh: moonMesh, angle: Math.random() * Math.PI * 2 };
+            });
+
+            planet.moons = moons;
+
+            return { mesh, ...planet, angle: Math.random() * Math.PI * 2 };
+        });
+
+        // Asteroid belt
+        const asteroidBelt = [];
+        for (let i = 0; i < 200; i++) {
+            const asteroidGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+            const asteroidMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+            const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+
+            const distance = 13 + Math.random() * 2; // Between Mars and Jupiter
+            const angle = Math.random() * Math.PI * 2;
+            asteroid.position.x = distance * Math.cos(angle);
+            asteroid.position.z = distance * Math.sin(angle);
+
+            scene.add(asteroid);
+            asteroidBelt.push({ asteroid, distance, angle, speed: 0.0003 + Math.random() * 0.0001 });
+        }
+
+        // Camera position
+        camera.position.z = 40;
+
+        // Handle planet click
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function onClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(planetMeshes.map(p => p.mesh));
+
+            if (intersects.length > 0) {
+                const clickedPlanet = planetMeshes.find(p => p.mesh === intersects[0].object);
+                if (clickedPlanet) {
+                    const details = document.getElementById('planet-details');
+                    const nameElem = document.getElementById('planet-name');
+                    const infoElem = document.getElementById('planet-info');
+                    const imageElem = document.getElementById('planet-image');
+
+                    nameElem.textContent = clickedPlanet.name;
+                    infoElem.innerHTML = `
+                        <b>Diameter:</b> ${clickedPlanet.info.diameter}<br>
+                        <b>Distance from Sun:</b> ${clickedPlanet.info.distanceFromSun}<br>
+                        <b>Position:</b> ${clickedPlanet.info.position}<br>
+                        <b>Minerals:</b> ${clickedPlanet.info.minerals}<br>
+                        <b>Environment:</b> ${clickedPlanet.info.environment}<br>
+                        <b>Temperature:</b> ${clickedPlanet.info.temperature}<br>
+                    `;
+                    imageElem.src = `textures/${clickedPlanet.name.toLowerCase()}.jpg`;
+
+                    details.style.display = 'block';
+                }
+            }
+        }
+
+        window.addEventListener('click', onClick);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate planets around the Sun
+            planetMeshes.forEach(planet => {
+                planet.angle += planet.speed;
+                planet.mesh.position.x = planet.distance * Math.cos(planet.angle);
+                planet.mesh.position.z = planet.distance * Math.sin(planet.angle);
+
+                // Rotate moons around the planet
+                planet.moons.forEach(moon => {
+                    moon.angle += 0.001;
+                    moon.mesh.position.x = planet.mesh.position.x + moon.distance * Math.cos(moon.angle);
+                    moon.mesh.position.z = planet.mesh.position.z + moon.distance * Math.sin(moon.angle);
+                });
+            });
+
+            // Rotate asteroids in the belt
+            asteroidBelt.forEach(asteroidObj => {
+                asteroidObj.angle += asteroidObj.speed;
+                asteroidObj.asteroid.position.x = asteroidObj.distance * Math.cos(asteroidObj.angle);
+                asteroidObj.asteroid.position.z = asteroidObj.distance * Math.sin(asteroidObj.angle);
+                asteroidObj.asteroid.position.x = asteroidObj.distance * Math.cos(asteroidObj.angle);
+                asteroidObj.asteroid.position.z = asteroidObj.distance * Math.sin(asteroidObj.angle);
+            });
+
+            // Render scene
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Adjust canvas on window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
