@@ -1,245 +1,101 @@
-<div align="center">
+# 🌌 Solar System Explorer
 
-# 🌌 Solar System Project
+### An Interactive 3D Solar System built with Three.js & Modern Web Technologies
 
-### An Interactive 3D Solar System built with modern web technologies
-
-Explore the planets, experience realistic animations, and learn about our Solar System through an immersive web experience.
-
-![GitHub stars](https://img.shields.io/github/stars/S-SamarthBhatt-B/Solar-System-Project?style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/S-SamarthBhatt-B/Solar-System-Project?style=for-the-badge)
-![GitHub repo size](https://img.shields.io/github/repo-size/S-SamarthBhatt-B/Solar-System-Project?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-
-### 🚀 Live Demo
-
-**https://s-samarthbhatt-b.github.io/Solar-System-Project/**
-
-</div>
+Explore the planets, experience realistic orbital physics and lighting, run simulations, compare celestial bodies, take narrated tours, and test your knowledge through an immersive web experience.
 
 ---
 
-# 🌍 About the Project
+## ✨ Features & Capabilities
 
-This project is an interactive visualization of our Solar System that allows users to explore planets in a realistic 3D environment.
+### 🪐 3D Visual Realism & Rendering
+- **Full Solar System**: Sun, 8 major planets, Pluto, Earth's Moon, and major planetary moons.
+- **Saturn 3D Rings**: Custom geometry with realistic transparency and rotational tilt.
+- **Earth Atmosphere & Cloud Layer**: Rotating cloud mesh with additive atmospheric blending.
+- **Solar Atmosphere & Corona**: Glowing Sun lens flare and atmospheric corona effect.
+- **3D Particle Starfield**: Thousands of dynamic twinkling star particles in deep space.
+- **Procedural Asteroid Belt**: Over 350 asteroids orbiting between Mars and Jupiter.
+- **Cinematic Camera Lerp (`flyToPlanet`)**: Smooth GSAP camera transitions when selecting or searching for any planet.
 
-The goal of this project is to combine **science, education, and web development** into an engaging experience that demonstrates the power of modern frontend technologies.
+### 🎮 Simulation & Control Dock
+- **Time Controls**: Play, Pause, Reverse, and Speed Slider (0.1x to 5.0x simulation speed).
+- **Camera Presets**: System Overview, Top-Down Grid View, and "Camera Follow" mode.
+- **Interactive Search**: Search bar with real-time auto-complete dropdown to jump directly to any planet or moon.
+- **Orbital Toggles**: Toggle orbital path rings and 3D labels on/off.
 
-Whether you're a student, developer, or astronomy enthusiast, this project offers an enjoyable way to learn about our cosmic neighborhood.
+### 📊 Educational & Guided Tour Tools
+- **Glassmorphic Slide-Out Sidebar**: Detailed tabs for *Overview*, *Specifications*, and *Exploration History*.
+- **Side-by-Side Planet Comparator Tool**: Compare size, gravity, mass, and temperature of any two planets side-by-side.
+- **Guided Story Tour**: Interactive step-by-step camera walkthrough from the Sun out to Neptune with text narration.
+- **Web Audio SFX**: Synthesized futuristic audio effects without needing external sound files.
+
+### 🏆 Gamified Quiz System
+- **Multiple Choice Questions**: 8 randomized questions per round.
+- **Real-Time Timer & Combo Streaks**: 15-second timer per question with combo streak score multipliers.
+- **High Scores**: Saved automatically in `localStorage`.
+- **Celebratory Confetti**: HTML5 Canvas particle explosion on quiz completion.
 
 ---
 
-# ✨ Features
-
-- 🌞 Realistic Solar System
-- 🪐 Animated Planet Orbits
-- 🌍 Individual Planet Models
-- 🌌 Beautiful Space Background
-- ⚡ Smooth Animations
-- 🎯 Interactive Camera Controls
-- 📱 Responsive Design
-- 🚀 Fast Performance
-- 🎨 Modern User Interface
-- 💻 Cross Platform Support
-
----
-
-# 📸 Preview
-
-> Add screenshots here
+## 📂 Project Structure
 
 ```
-assets/
- ├── home.png
- ├── solar-system.png
- ├── planets.png
- └── mobile.png
-```
-
-Example:
-
-```md
-![Home](assets/home.png)
-
-![Solar System](assets/solar-system.png)
-```
-
----
-
-# 🛠 Technologies Used
-
-- HTML5
-- CSS3
-- JavaScript (ES6)
-- Three.js *(if used)*
-- WebGL *(if used)*
-
----
-
-# 📂 Project Structure
-
-```
-Solar-System-Project
+Solar-System-Project/
 │
-├── assets/
 ├── css/
+│   └── styles.css        # Glassmorphism design system & responsive UI styles
+│
 ├── js/
-├── images/
-├── index.html
-├── README.md
-└── LICENSE
+│   ├── data.js           # Astronomical dataset, tour steps & quiz question pool
+│   ├── solarSystem.js    # Three.js 3D rendering engine, lighting, & camera controls
+│   ├── ui.js             # HUD, search, sidebar, comparison modal, & tour runner
+│   └── quiz.js           # Gamified quiz engine, timer, streak counters, & confetti
+│
+├── textures/             # Planetary surface image maps
+│   ├── sun.jpg
+│   ├── mercury.jpg
+│   ├── venus.jpg
+│   ├── earth.jpg
+│   ├── mars.jpg
+│   ├── jupiter.jpg
+│   ├── saturn.jpg
+│   ├── uranus.jpg
+│   ├── neptune.jpg
+│   └── moon.jpg
+│
+├── index.html            # Main 3D Solar System Explorer application
+├── quiz.html             # Standalone Astronomy Quiz application
+└── README.md             # Documentation
 ```
 
 ---
 
-# 🚀 Getting Started
+## 🚀 Getting Started
 
-## Clone Repository
-
+1. Clone the repository:
 ```bash
 git clone https://github.com/S-SamarthBhatt-B/Solar-System-Project.git
 ```
 
-Open the project
-
+2. Navigate into the directory:
 ```bash
 cd Solar-System-Project
 ```
 
-Simply open
-
-```
-index.html
-```
-
-or use
-
-```bash
-Live Server
-```
-
-inside VS Code.
+3. Open `index.html` in your browser (or use VS Code **Live Server**).
 
 ---
 
-# 🌎 Planet Information
+## 🛠️ Technologies Used
 
-The project includes:
-
-- ☀️ Sun
-- ☿ Mercury
-- ♀ Venus
-- 🌍 Earth
-- ♂ Mars
-- ♃ Jupiter
-- ♄ Saturn
-- ♅ Uranus
-- ♆ Neptune
+- **HTML5 & CSS3** (Vanilla CSS Custom Properties & Glassmorphism)
+- **JavaScript (ES6)**
+- **Three.js (r128)** (3D WebGL Rendering & OrbitControls)
+- **GSAP (GreenSock)** (Smooth camera position & target interpolation)
+- **Web Audio API** (Native audio synthesizer for UI sound effects)
 
 ---
 
-# 🎮 Controls
+## 📜 License
 
-| Action | Function |
-|---------|----------|
-| Mouse Drag | Rotate Camera |
-| Mouse Scroll | Zoom In/Out |
-| Left Click | Interact |
-| Touch | Mobile Support |
-
----
-
-# 💡 Future Improvements
-
-- 🌑 Moon animations
-- ☄️ Asteroids
-- 🌠 Comets
-- 🚀 Spacecraft
-- Planet Information Cards
-- Search Feature
-- Day/Night Simulation
-- Planet Speed Controls
-- Sound Effects
-- VR Support
-
----
-
-# 📈 Learning Objectives
-
-This project demonstrates:
-
-- 3D Graphics
-- JavaScript Animation
-- DOM Manipulation
-- Responsive Design
-- Mathematical Calculations
-- Orbital Motion
-- Interactive UI Development
-
----
-
-# 🤝 Contributing
-
-Contributions are always welcome.
-
-1. Fork the repository
-
-2. Create a feature branch
-
-```bash
-git checkout -b feature-name
-```
-
-3. Commit changes
-
-```bash
-git commit -m "Added awesome feature"
-```
-
-4. Push
-
-```bash
-git push origin feature-name
-```
-
-5. Open a Pull Request
-
----
-
-# ⭐ Support
-
-If you like this project, please consider giving it a ⭐ on GitHub.
-
-It helps others discover the project and motivates future improvements.
-
----
-
-# 👨‍💻 Author
-
-**Samarth Bhatt**
-
-GitHub
-
-https://github.com/S-SamarthBhatt-B
-
-LinkedIn
-
-https://linkedin.com/in/samarth-bhatt29
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
-
-Feel free to use, modify, and share this project.
-
----
-
-<div align="center">
-
-### 🌌 Keep Exploring the Universe!
-
-Made with ❤️ by **Samarth Bhatt**
-
-</div>
+This project is licensed under the **MIT License**. Feel free to use, modify, and share!

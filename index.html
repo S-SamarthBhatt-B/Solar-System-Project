@@ -3,343 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System Explorer</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
-        
-        .details {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            max-width: 300px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .details h3 {
-            margin: 0 0 10px;
-        }
-        .details img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-        
-        .translucent-btn {
-            position: absolute;
-            bottom: 20px; /* Distance from the bottom */
-            left: 50%;
-            transform: translateX(-50%); /* Centers the button */
-            
-            font-size: 18px;
-            padding: 12px 24px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s ease-in-out;
-        }
-
-        .translucent-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.8);
-        }
-    </style>
+    <title>Solar System Explorer | Interactive 3D Simulation</title>
+    <meta name="description" content="An interactive 3D Solar System visualization featuring realistic planet models, orbits, guided tours, comparison tools, and educational facts.">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <a href="quiz.html">
-        <button class="translucent-btn">Open Quiz</button>
-    </a>
-    
-    
-    <div class="details" id="planet-details" style="display: none;">
-        <img id="planet-image" src="" alt="Planet Image">
-        <h3 id="planet-name">Planet Name</h3>
-        <p id="planet-info">Details about the planet will appear here.</p>
+
+    <!-- Hidden Image elements for CORS-free local WebGL texture loading -->
+    <div style="display: none;">
+        <img id="tex-sun" src="textures/sun.jpg">
+        <img id="tex-mercury" src="textures/mercury.jpg">
+        <img id="tex-venus" src="textures/venus.jpg">
+        <img id="tex-earth" src="textures/earth.jpg">
+        <img id="tex-mars" src="textures/mars.jpg">
+        <img id="tex-jupiter" src="textures/jupiter.jpg">
+        <img id="tex-saturn" src="textures/saturn.jpg">
+        <img id="tex-uranus" src="textures/uranus.jpg">
+        <img id="tex-neptune" src="textures/neptune.jpg">
+        <img id="tex-moon" src="textures/moon.jpg">
     </div>
+
+    <!-- 3D Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Floating 3D Planet Labels Container -->
+    <div id="labels-container"></div>
+
+    <!-- Top HUD Navigation Bar -->
+    <header id="top-hud">
+        <div class="brand-logo glass">
+            <span class="logo-icon">🌌</span>
+            <div>
+                <h1>Solar System</h1>
+                <span>Interactive 3D Explorer</span>
+            </div>
+        </div>
+
+        <!-- Search Bar with Auto-Complete -->
+        <div class="search-container">
+            <div class="search-input-wrapper glass">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search planet, sun, moon..." autocomplete="off">
+            </div>
+            <div id="search-dropdown" class="search-dropdown glass"></div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="hud-actions">
+            <button id="music-toggle-btn" class="icon-btn" title="Toggle Cosmic Music Soundscape">🎵</button>
+            <button id="audio-toggle-btn" class="icon-btn active" title="Toggle Sound Effects">🔊</button>
+            <button id="view-reset-btn" class="icon-btn" title="Reset Camera View">🎥</button>
+            <button id="view-top-btn" class="icon-btn" title="Top-Down View">🛰️</button>
+            <a href="quiz.html" class="btn-primary-action">
+                <span>🏆</span> Start Quiz
+            </a>
+        </div>
+    </header>
+
+
+    <!-- Bottom Simulation Controls Dock -->
+    <footer id="bottom-dock" class="glass">
+        <div class="dock-group">
+            <button id="btn-play-pause" class="dock-btn">⏸ Pause</button>
+            <button id="btn-reverse" class="dock-btn">🔄 Reverse</button>
+        </div>
+
+        <div class="dock-divider"></div>
+
+        <div class="speed-control">
+            <span>Speed:</span>
+            <input type="range" id="speed-slider" class="speed-slider" min="0.01" max="3.0" step="0.01" value="0.10">
+            <span id="speed-value-text">0.10x</span>
+        </div>
+
+        <div class="dock-divider"></div>
+
+        <div class="dock-group">
+            <button id="btn-toggle-orbits" class="dock-btn active">🌐 Orbits</button>
+            <button id="btn-toggle-spacecraft" class="dock-btn active">🚀 ISRO & Missions</button>
+            <button id="btn-tour-start" class="dock-btn">🚀 Story Tour</button>
+            <button id="btn-compare-open" class="dock-btn">⚔️ Compare</button>
+        </div>
+    </footer>
+
+    <!-- Spacecraft / ISRO Mission Detail Modal -->
+    <div id="spacecraft-modal" class="modal-overlay">
+        <div class="modal-card glass" style="max-width: 550px;">
+            <div class="modal-header">
+                <div>
+                    <span id="mission-agency-badge" class="time-machine-badge" style="background: rgba(255, 153, 51, 0.25); border-color: #ff9933; color: #ffaa44;">ISRO (India)</span>
+                    <h2 id="mission-modal-title" style="margin-top: 6px;">Chandrayaan-3</h2>
+                    <p id="mission-modal-type" style="font-size: 12px; color: var(--accent-cyan);">Lunar Lander & Rover Mission</p>
+                </div>
+                <button id="spacecraft-modal-close" class="close-btn">✕</button>
+            </div>
+
+            <div class="sidebar-content" style="padding: 12px 0;">
+                <div class="spec-row">
+                    <span class="spec-label">🚀 Rocket Vehicle</span>
+                    <span id="mission-rocket" class="spec-val">LVM3-M4</span>
+                </div>
+                <div class="spec-row">
+                    <span class="spec-label">📅 Launch Date</span>
+                    <span id="mission-launch" class="spec-val">14 July 2023</span>
+                </div>
+                <div class="spec-row">
+                    <span class="spec-label">📍 Target / Orbit Site</span>
+                    <span id="mission-site" class="spec-val">Lunar South Pole</span>
+                </div>
+
+                <div class="description-box" style="margin-top: 14px;">
+                    <p id="mission-desc">Mission description text goes here...</p>
+                </div>
+
+                <div class="fun-fact-box" style="margin-top: 12px; border-left-color: var(--accent-cyan);">
+                    <h4 style="color: var(--accent-cyan);">🏆 Historic Achievements</h4>
+                    <p id="mission-achievements">Key scientific discoveries & achievements...</p>
+                </div>
+
+                <button id="btn-fly-to-mission" class="btn-primary-action" style="width: 100%; justify-content: center; margin-top: 16px;">
+                    🛰️ Track & Fly Camera to Mission
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide-Out Planet Info Sidebar -->
+    <aside id="info-sidebar" class="glass">
+        <div class="sidebar-header">
+            <div class="title-area">
+                <img id="sidebar-planet-avatar" class="planet-avatar" src="" alt="Planet">
+                <div class="planet-title-text">
+                    <h2 id="sidebar-planet-name">Planet</h2>
+                    <p id="sidebar-planet-type">Terrestrial Planet</p>
+                </div>
+            </div>
+            <button id="sidebar-close-btn" class="close-btn" title="Close Panel">✕</button>
+        </div>
+
+        <!-- Sidebar Navigation Tabs -->
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="specs">Specs</button>
+            <button class="tab-btn" data-tab="history">History</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="sidebar-content">
+            <!-- Overview Pane -->
+            <div id="tab-overview" class="tab-pane active">
+                <div id="planet-desc" class="description-box">
+                    Planet description goes here...
+                </div>
+                <div class="fun-fact-box">
+                    <h4>💡 Did You Know?</h4>
+                    <p id="planet-fun-fact">Fun fact content goes here.</p>
+                </div>
+                <button id="btn-narrate-planet" class="btn-narrate">🗣️ Listen to AI Voice Narration</button>
+            </div>
+
+            <!-- Specs Pane -->
+            <div id="tab-specs" class="tab-pane">
+                <div id="stat-grid" class="stat-grid">
+                    <!-- Dynamic Stat Cards -->
+                </div>
+            </div>
+
+            <!-- History Pane -->
+            <div id="tab-history" class="tab-pane">
+                <div id="planet-history" class="description-box">
+                    Exploration history content.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Quick Actions -->
+        <div class="sidebar-actions">
+            <button id="btn-follow-planet" class="btn-sidebar">🎥 Camera Follow</button>
+        </div>
+    </aside>
+
+    <!-- Side-by-Side Planet Comparison Modal -->
+    <div id="compare-modal" class="modal-overlay">
+        <div class="modal-container glass">
+            <div class="modal-header">
+                <h2>⚔️ Planet Comparison Tool</h2>
+                <button id="compare-close-btn" class="close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="compare-selectors">
+                    <select id="select-planet-1" class="select-box"></select>
+                    <div class="vs-badge">VS</div>
+                    <select id="select-planet-2" class="select-box"></select>
+                </div>
+                <div id="compare-results" class="compare-table">
+                    <!-- Dynamic Comparison Rows -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guided Story Tour Overlay Banner -->
+    <div id="tour-overlay" class="glass">
+        <div class="tour-header">
+            <h3 id="tour-title">1. Sun - The Core</h3>
+            <span id="tour-badge" class="tour-step-badge">Step 1 of 9</span>
+        </div>
+        <p id="tour-text" class="tour-text">Tour narration content.</p>
+        <div class="tour-controls">
+            <button id="tour-prev-btn" class="dock-btn">◀ Previous</button>
+            <button id="tour-close-btn" class="dock-btn">Exit Tour</button>
+            <button id="tour-next-btn" class="dock-btn active">Next ▶</button>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Application Modules -->
+    <script src="js/texturesData.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/solarSystem.js"></script>
+    <script src="js/ui.js"></script>
     <script>
-        // Scene, Camera, Renderer
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Add OrbitControls for 360-degree view
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.1;
-        controls.maxDistance = 100;
-        controls.minDistance = 10;
-
-        // Light source (Sunlight)
-        const light = new THREE.PointLight(0xffffff, 1.5, 0);
-        light.position.set(0, 0, 0);
-        scene.add(light);
-
-        // Load textures
-        const textureLoader = new THREE.TextureLoader();
-
-        const textures = {
-            Sun: textureLoader.load('textures/sun.jpg'),
-            Mercury: textureLoader.load('textures/mercury.jpg'),
-            Venus: textureLoader.load('textures/venus.jpg'),
-            Earth: textureLoader.load('textures/earth.jpg'),
-            Mars: textureLoader.load('textures/mars.jpg'),
-            Jupiter: textureLoader.load('textures/jupiter.jpg'),
-            Saturn: textureLoader.load('textures/saturn.jpg'),
-            Uranus: textureLoader.load('textures/uranus.jpg'),
-            Neptune: textureLoader.load('textures/neptune.jpg'),
-            Moon: textureLoader.load('textures/moon.jpg')
-        };
-
-        // Sun
-        const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
-        const sunMaterial = new THREE.MeshBasicMaterial({ map: textures.Sun });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
-
-        // Planets data
-        const planets = [
-            { 
-                name: 'Mercury', size: 0.3, distance: 5, speed: 0.002, moons: [], 
-                info: {
-                    diameter: '4,880 km',
-                    distanceFromSun: '57.91 million km',
-                    position: 1,
-                    minerals: 'Silicates, Iron',
-                    environment: 'No atmosphere',
-                    temperature: '-173 to 427°C'
-                }
-            },
-            { 
-                name: 'Venus', size: 0.6, distance: 7, speed: 0.0015, moons: [], 
-                info: {
-                    diameter: '12,104 km',
-                    distanceFromSun: '108.2 million km',
-                    position: 2,
-                    minerals: 'Basaltic rocks',
-                    environment: 'Thick CO2 atmosphere',
-                    temperature: '462°C'
-                }
-            },
-            { 
-                name: 'Earth', size: 0.7, distance: 9, speed: 0.001, 
-                moons: [
-                    { name: 'Moon', size: 0.2, distance: 1, texture: textures.Moon }
-                ], 
-                info: {
-                    diameter: '12,742 km',
-                    distanceFromSun: '149.6 million km',
-                    position: 3,
-                    minerals: 'Silicates, Iron, Water',
-                    environment: 'Nitrogen-Oxygen atmosphere',
-                    temperature: '-88 to 58°C'
-                }
-            },
-            { 
-                name: 'Mars', size: 0.5, distance: 11, speed: 0.0008, 
-                moons: [
-                    { name: 'Phobos', size: 0.1, distance: 0.5 },
-                    { name: 'Deimos', size: 0.1, distance: 0.8 }
-                ], 
-                info: {
-                    diameter: '6,779 km',
-                    distanceFromSun: '227.9 million km',
-                    position: 4,
-                    minerals: 'Iron Oxides',
-                    environment: 'Thin CO2 atmosphere',
-                    temperature: '-63°C'
-                }
-            },
-            { 
-                name: 'Jupiter', size: 1.5, distance: 15, speed: 0.0005, 
-                moons: [
-                    { name: 'Europa', size: 0.3, distance: 2 },
-                    { name: 'Ganymede', size: 0.4, distance: 3 }
-                ], 
-                info: {
-                    diameter: '139,820 km',
-                    distanceFromSun: '778.5 million km',
-                    position: 5,
-                    minerals: 'Hydrogen, Helium',
-                    environment: 'Gas Giant',
-                    temperature: '-108°C'
-                }
-            },
-            { 
-                name: 'Saturn', size: 1.2, distance: 20, speed: 0.0003, 
-                moons: [
-                    { name: 'Titan', size: 0.4, distance: 2 }
-                ], 
-                info: {
-                    diameter: '116,460 km',
-                    distanceFromSun: '1.434 billion km',
-                    position: 6,
-                    minerals: 'Hydrogen, Helium',
-                    environment: 'Gas Giant',
-                    temperature: '-139°C'
-                }
-            },
-            { 
-                name: 'Uranus', size: 1, distance: 25, speed: 0.0002, moons: [], 
-                info: {
-                    diameter: '50,724 km',
-                    distanceFromSun: '2.871 billion km',
-                    position: 7,
-                    minerals: 'Ices, Methane',
-                    environment: 'Ice Giant',
-                    temperature: '-195°C'
-                }
-            },
-            { 
-                name: 'Neptune', size: 1, distance: 30, speed: 0.0001, moons: [], 
-                info: {
-                    diameter: '49,244 km',
-                    distanceFromSun: '4.495 billion km',
-                    position: 8,
-                    minerals: 'Ices, Methane',
-                    environment: 'Ice Giant',
-                    temperature: '-201°C'
-                }
-            }
-        ];
-
-        // Create planets and orbital lines
-        const planetMeshes = planets.map(planet => {
-            const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
-            const material = new THREE.MeshStandardMaterial({ map: textures[planet.name] });
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            // Orbital lines
-            const orbitGeometry = new THREE.RingGeometry(planet.distance - 0.01, planet.distance + 0.01, 64);
-            const orbitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-            const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
-            orbit.rotation.x = Math.PI / 2;
-            scene.add(orbit);
-
-            // Create moons
-            const moons = planet.moons.map(moon => {
-                const moonGeometry = new THREE.SphereGeometry(moon.size, 16, 16);
-                const moonMaterial = new THREE.MeshStandardMaterial({ map: moon.texture || null, color: 0xaaaaaa });
-                const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
-                scene.add(moonMesh);
-                return { ...moon, mesh: moonMesh, angle: Math.random() * Math.PI * 2 };
-            });
-
-            planet.moons = moons;
-
-            return { mesh, ...planet, angle: Math.random() * Math.PI * 2 };
-        });
-
-        // Asteroid belt
-        const asteroidBelt = [];
-        for (let i = 0; i < 200; i++) {
-            const asteroidGeometry = new THREE.SphereGeometry(0.05, 8, 8);
-            const asteroidMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
-            const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-
-            const distance = 13 + Math.random() * 2; // Between Mars and Jupiter
-            const angle = Math.random() * Math.PI * 2;
-            asteroid.position.x = distance * Math.cos(angle);
-            asteroid.position.z = distance * Math.sin(angle);
-
-            scene.add(asteroid);
-            asteroidBelt.push({ asteroid, distance, angle, speed: 0.0003 + Math.random() * 0.0001 });
-        }
-
-        // Camera position
-        camera.position.z = 40;
-
-        // Handle planet click
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        function onClick(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(planetMeshes.map(p => p.mesh));
-
-            if (intersects.length > 0) {
-                const clickedPlanet = planetMeshes.find(p => p.mesh === intersects[0].object);
-                if (clickedPlanet) {
-                    const details = document.getElementById('planet-details');
-                    const nameElem = document.getElementById('planet-name');
-                    const infoElem = document.getElementById('planet-info');
-                    const imageElem = document.getElementById('planet-image');
-
-                    nameElem.textContent = clickedPlanet.name;
-                    infoElem.innerHTML = `
-                        <b>Diameter:</b> ${clickedPlanet.info.diameter}<br>
-                        <b>Distance from Sun:</b> ${clickedPlanet.info.distanceFromSun}<br>
-                        <b>Position:</b> ${clickedPlanet.info.position}<br>
-                        <b>Minerals:</b> ${clickedPlanet.info.minerals}<br>
-                        <b>Environment:</b> ${clickedPlanet.info.environment}<br>
-                        <b>Temperature:</b> ${clickedPlanet.info.temperature}<br>
-                    `;
-                    imageElem.src = `textures/${clickedPlanet.name.toLowerCase()}.jpg`;
-
-                    details.style.display = 'block';
-                }
-            }
-        }
-
-        window.addEventListener('click', onClick);
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Rotate planets around the Sun
-            planetMeshes.forEach(planet => {
-                planet.angle += planet.speed;
-                planet.mesh.position.x = planet.distance * Math.cos(planet.angle);
-                planet.mesh.position.z = planet.distance * Math.sin(planet.angle);
-
-                // Rotate moons around the planet
-                planet.moons.forEach(moon => {
-                    moon.angle += 0.001;
-                    moon.mesh.position.x = planet.mesh.position.x + moon.distance * Math.cos(moon.angle);
-                    moon.mesh.position.z = planet.mesh.position.z + moon.distance * Math.sin(moon.angle);
-                });
-            });
-
-            // Rotate asteroids in the belt
-            asteroidBelt.forEach(asteroidObj => {
-                asteroidObj.angle += asteroidObj.speed;
-                asteroidObj.asteroid.position.x = asteroidObj.distance * Math.cos(asteroidObj.angle);
-                asteroidObj.asteroid.position.z = asteroidObj.distance * Math.sin(asteroidObj.angle);
-                asteroidObj.asteroid.position.x = asteroidObj.distance * Math.cos(asteroidObj.angle);
-                asteroidObj.asteroid.position.z = asteroidObj.distance * Math.sin(asteroidObj.angle);
-            });
-
-            // Render scene
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Adjust canvas on window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        document.addEventListener('DOMContentLoaded', () => {
+            const engine = new SolarSystemEngine('webgl-canvas');
+            const ui = new UIController(engine);
         });
     </script>
 </body>
